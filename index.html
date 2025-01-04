@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPS Compare</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212; /* Dark background for dark mode */
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden; /* Prevent scrolling */
+    }
+    .ball-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly; /* Space out the balls evenly */
+      overflow: hidden;
+    }
+    .ball {
+      width: 30px;
+      height: 30px;
+      background-color: #00bcd4; /* Cyan color for the balls */
+      border-radius: 50%; /* Make the balls circular */
+      position: absolute;
+      left: 50px; /* Start position for the balls */
+    }
+    .fps-label {
+      position: absolute;
+      left: 10px; /* Move labels to the left of the line */
+      color: #ffffff;
+      font-size: 12px; /* Small font for FPS labels */
+      text-align: right; /* Align text to the right */
+    }
+    .line {
+      position: absolute;
+      width: calc(100% - 20px); /* Adjust width to account for label space */
+      height: 1px;
+      background-color: #ffffff; /* White lines */
+      left: 60px; /* Start lines after the labels */
+    }
+    .slider-container {
+      margin-top: 20px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .slider {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>FPS Compare</h1>
+  <div class="ball-container" id="ballContainer">
+    <!-- Balls, Lines, and Labels will be added by JavaScript -->
+  </div>
+  <div class="slider-container">
+    <label for="fpsSlider">Adjust FPS for the bottom ball: <span id="fpsValue">30</span> FPS</label>
+    <input type="range" id="fpsSlider" class="slider" min="1" max="600" value="30">
+  </div>
+
+  <script>
+    const fpsList = [128, 100, 80, 75, 60, 50, 45, 30, 25, 24, 20, 15, 10, 5, 1]; // List of FPS values
+    const ballContainer = document.getElementById('ballContainer'); // Reference to the ball container
+    const fpsSlider = document.getElementById('fpsSlider'); // Slider element
+    const fpsValue = document.getElementById('fpsValue'); // Display for current FPS value of the slider
+
+    let customBall; // Reference to the custom ball
+    let customBallInterval; // Interval for the custom ball animation
+
+    // Function to create a ball, its label, and a line
+    function createBall(fps, index, isCustom = false) {
+      const ball = document.createElement('div'); // Create the ball element
+      const label = document.createElement('div'); // Create the label element
+      const line = document.createElement('div'); // Create the line element
+
+      ball.classList.add('ball'); // Assign the ball class
+      label.classList.add('fps-label'); // Assign the FPS label class
+      line.classList.add('line'); // Assign the line class
+
+      label.textContent = isCustom ? `X FPS` : `${fps} FPS`; // Set the label text
+
+      const topPosition = index * 40; // Position the balls and lines vertically
+      ball.style.top = `${topPosition}px`;
+      label.style.top = `${topPosition}px`; // Align label with the line
+      line.style.top = `${topPosition + 15}px`; // Adjust line position slightly below the label
+
+      ballContainer.appendChild(label); // Add the label to the container
+      ballContainer.appendChild(line); // Add the line to the container
+      ballContainer.appendChild(ball); // Add the ball to the container
+
+      if (!isCustom) {
+        animateBall(ball, fps); // Animate the ball at the given FPS
+      } else {
+        customBall = ball; // Save reference to the custom ball
+        animateCustomBall(ball, parseInt(fpsSlider.value)); // Start animation for custom ball
+      }
+    }
+
+    // Function to animate a single ball at a given FPS
+    function animateBall(ball, fps) {
+      let position = 50; // Starting position
+      let direction = 1; // Initial direction (1 = right, -1 = left)
+      const speed = 2; // Speed of movement in pixels per frame
+
+      function move() {
+        position += speed * direction; // Update position
+
+        // Reverse direction if the ball hits the edge
+        if (position >= ballContainer.clientWidth - 30 || position <= 50) {
+          direction *= -1;
+        }
+
+        ball.style.left = `${position}px`; // Update the ball's position
+      }
+
+      // Set an interval based on the FPS value
+      setInterval(move, 1000 / fps);
+    }
+
+    // Function to animate the custom ball with adjustable FPS
+    function animateCustomBall(ball, fps) {
+      let position = 50; // Starting position
+      let direction = 1; // Initial direction (1 = right, -1 = left)
+      const speed = 2; // Speed of movement in pixels per frame
+
+      // Clear any existing interval
+      if (customBallInterval) {
+        clearInterval(customBallInterval);
+      }
+
+      function move() {
+        position += speed * direction; // Update position
+
+        // Reverse direction if the ball hits the edge
+        if (position >= ballContainer.clientWidth - 30 || position <= 50) {
+          direction *= -1;
+        }
+
+        ball.style.left = `${position}px`; // Update the ball's position
+      }
+
+      // Set a new interval based on the FPS value
+      customBallInterval = setInterval(move, 1000 / fps);
+    }
+
+    // Create balls, lines, and labels based on FPS list
+    fpsList.forEach((fps, index) => {
+      createBall(fps, index);
+    });
+
+    // Add the custom ball at the bottom
+    createBall(30, fpsList.length, true);
+
+    // Update custom ball FPS when slider value changes
+    fpsSlider.addEventListener('input', () => {
+      const newFps = parseInt(fpsSlider.value);
+      fpsValue.textContent = newFps; // Update displayed FPS value
+      animateCustomBall(customBall, newFps); // Adjust custom ball animation
+    });
+  </script>
+</body>
+</html>
