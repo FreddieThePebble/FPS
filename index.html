@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FPS Compare</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/FreddieThePebble/FPS/refs/heads/main/icon.png" type="image/png">
   <style>
     body {
       margin: 0;
@@ -49,13 +50,12 @@
       background-color: #ffffff; /* White lines */
       left: 60px; /* Start lines after the labels */
     }
-    .slider-container {
-      margin-top: 20px;
-      text-align: center;
+    .bounce-counter {
+      position: absolute;
+      right: 10px; /* Move counter to the right of the line */
       color: #ffffff;
-    }
-    .slider {
-      width: 300px;
+      font-size: 12px;
+      text-align: left; /* Align text to the left */
     }
   </style>
 </head>
@@ -64,16 +64,9 @@
   <div class="ball-container" id="ballContainer">
     <!-- Balls, Lines, and Labels will be added by JavaScript -->
   </div>
-  <div class="slider-container">
-    <label for="fpsSlider">Adjust FPS for the bottom ball: <span id="fpsValue">30</span> FPS</label>
-    <input type="range" id="fpsSlider" class="slider" min="1" max="600" value="30">
-  </div>
-
   <script>
     const fpsList = [128, 100, 80, 75, 60, 50, 45, 30, 25, 24, 20, 15, 10, 5, 1]; // List of FPS values
     const ballContainer = document.getElementById('ballContainer'); // Reference to the ball container
-    const fpsSlider = document.getElementById('fpsSlider'); // Slider element
-    const fpsValue = document.getElementById('fpsValue'); // Display for current FPS value of the slider
 
     let customBall; // Reference to the custom ball
     let customBallInterval; // Interval for the custom ball animation
@@ -83,10 +76,12 @@
       const ball = document.createElement('div'); // Create the ball element
       const label = document.createElement('div'); // Create the label element
       const line = document.createElement('div'); // Create the line element
+      const counter = document.createElement('div'); // Create the bounce counter element
 
       ball.classList.add('ball'); // Assign the ball class
       label.classList.add('fps-label'); // Assign the FPS label class
       line.classList.add('line'); // Assign the line class
+      counter.classList.add('bounce-counter'); // Assign the bounce counter class
 
       label.textContent = isCustom ? `X FPS` : `${fps} FPS`; // Set the label text
 
@@ -94,21 +89,25 @@
       ball.style.top = `${topPosition}px`;
       label.style.top = `${topPosition}px`; // Align label with the line
       line.style.top = `${topPosition + 15}px`; // Adjust line position slightly below the label
+      counter.style.top = `${topPosition}px`; // Align the counter with the line
+
+      counter.textContent = 0; // Initialize bounce count
 
       ballContainer.appendChild(label); // Add the label to the container
       ballContainer.appendChild(line); // Add the line to the container
       ballContainer.appendChild(ball); // Add the ball to the container
+      ballContainer.appendChild(counter); // Add the counter to the container
 
       if (!isCustom) {
-        animateBall(ball, fps); // Animate the ball at the given FPS
+        animateBall(ball, fps, counter, line); // Animate the ball at the given FPS
       } else {
         customBall = ball; // Save reference to the custom ball
-        animateCustomBall(ball, parseInt(fpsSlider.value)); // Start animation for custom ball
+        animateCustomBall(ball, parseInt(fpsSlider.value), counter, line); // Start animation for custom ball
       }
     }
 
     // Function to animate a single ball at a given FPS
-    function animateBall(ball, fps) {
+    function animateBall(ball, fps, counter, line) {
       let position = 50; // Starting position
       let direction = 1; // Initial direction (1 = right, -1 = left)
       const speed = 2; // Speed of movement in pixels per frame
@@ -119,6 +118,9 @@
         // Reverse direction if the ball hits the edge
         if (position >= ballContainer.clientWidth - 30 || position <= 50) {
           direction *= -1;
+          let bounceCount = parseInt(counter.textContent); // Get the current bounce count
+          bounceCount++; // Increment bounce count
+          counter.textContent = bounceCount; // Update the bounce count on the ball's counter
         }
 
         ball.style.left = `${position}px`; // Update the ball's position
@@ -129,7 +131,7 @@
     }
 
     // Function to animate the custom ball with adjustable FPS
-    function animateCustomBall(ball, fps) {
+    function animateCustomBall(ball, fps, counter, line) {
       let position = 50; // Starting position
       let direction = 1; // Initial direction (1 = right, -1 = left)
       const speed = 2; // Speed of movement in pixels per frame
@@ -145,6 +147,9 @@
         // Reverse direction if the ball hits the edge
         if (position >= ballContainer.clientWidth - 30 || position <= 50) {
           direction *= -1;
+          let bounceCount = parseInt(counter.textContent); // Get the current bounce count
+          bounceCount++; // Increment bounce count
+          counter.textContent = bounceCount; // Update the bounce count on the ball's counter
         }
 
         ball.style.left = `${position}px`; // Update the ball's position
@@ -162,12 +167,22 @@
     // Add the custom ball at the bottom
     createBall(30, fpsList.length, true);
 
-    // Update custom ball FPS when slider value changes
-    fpsSlider.addEventListener('input', () => {
-      const newFps = parseInt(fpsSlider.value);
-      fpsValue.textContent = newFps; // Update displayed FPS value
-      animateCustomBall(customBall, newFps); // Adjust custom ball animation
-    });
+    // Function to resize the lines when the window is resized
+    function resizeLines() {
+      const lines = document.querySelectorAll('.line');
+      const ballContainerWidth = ballContainer.clientWidth;
+
+      // Adjust the width of each line dynamically
+      lines.forEach((line) => {
+        line.style.width = `${ballContainerWidth - 20}px`;
+      });
+    }
+
+    // Call resizeLines on window resize
+    window.addEventListener('resize', resizeLines);
+
+    // Initial resize to set line widths
+    resizeLines();
   </script>
 </body>
 </html>
